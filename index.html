@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat IA — Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #ffffff;
+            --surface: #f7f8fa;
+            --border: #e8eaed;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --accent: #7c3aed;
+            --accent-light: #ede9fe;
+            --accent-hover: #ddd6fe;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        /* ── HEADER ── */
+        .header {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .header-icon {
+            width: 30px; height: 30px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 15px; flex-shrink: 0;
+        }
+
+        .header-info h3 { font-size: 13px; font-weight: 600; }
+        .header-info p  { font-size: 10px; color: var(--muted); }
+
+        .key-btn {
+            margin-left: auto;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px; font-weight: 500;
+            cursor: pointer; border: none;
+        }
+        .key-btn.unset { background: #fee2e2; color: #991b1b; }
+        .key-btn.set   { background: #d1fae5; color: #065f46; }
+
+        /* ── CONFIG PANEL ── */
+        .config {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 14px;
+            display: none;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .config.open { display: flex; }
+        .config input {
+            flex: 1; padding: 7px 10px;
+            border: 1px solid var(--border); border-radius: 6px;
+            font-size: 12px; background: white; outline: none;
+        }
+        .config input:focus { border-color: var(--accent); }
+        .config button {
+            padding: 7px 14px;
+            background: var(--accent); color: white;
+            border: none; border-radius: 6px;
+            font-size: 12px; cursor: pointer; white-space: nowrap;
+        }
+
+        /* ── CHAT ── */
+        .chat {
+            flex: 1; overflow-y: auto;
+            padding: 14px; display: flex;
+            flex-direction: column; gap: 10px;
+        }
+        .chat::-webkit-scrollbar { width: 4px; }
+        .chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .row { display: flex; gap: 8px; align-items: flex-end; }
+        .row.user { flex-direction: row-reverse; }
+
+        .avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; flex-shrink: 0; font-weight: 600;
+        }
+        .avatar.ai   { background: var(--accent-light); color: var(--accent); }
+        .avatar.user { background: var(--accent); color: white; }
+
+        .bubble {
+            max-width: 78%;
+            padding: 9px 13px;
+            border-radius: 14px;
+            font-size: 12.5px; line-height: 1.55;
+        }
+        .bubble.ai   { background: #f1f5f9; border-bottom-left-radius: 3px; }
+        .bubble.user { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
+
+        /* Typing dots */
+        .dots span {
+            display: inline-block; width: 5px; height: 5px;
+            background: var(--muted); border-radius: 50%;
+            margin: 0 1px; animation: blink 1.2s infinite;
+        }
+        .dots span:nth-child(2) { animation-delay: .2s; }
+        .dots span:nth-child(3) { animation-delay: .4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: .2; }
+            40%            { opacity: 1;  }
+        }
+
+        /* Sugestões */
+        .suggestions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+        .chip {
+            padding: 4px 10px;
+            background: var(--accent-light); color: var(--accent);
+            border: none; border-radius: 20px;
+            font-size: 11px; cursor: pointer; transition: background .15s;
+        }
+        .chip:hover { background: var(--accent-hover); }
+
+        /* Mensagem de sistema */
+        .sys-msg {
+            text-align: center; color: var(--muted);
+            font-size: 11px; padding: 2px 0;
+        }
+
+        /* ── INPUT ── */
+        .input-area {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            display: flex; gap: 8px; align-items: flex-end;
+            flex-shrink: 0;
+        }
+        textarea {
+            flex: 1; padding: 8px 12px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-size: 12.5px; font-family: inherit; color: var(--text);
+            resize: none; min-height: 36px; max-height: 80px;
+            outline: none; transition: border-color .15s; overflow-y: auto;
+        }
+        textarea:focus { border-color: var(--accent); }
+        textarea::placeholder { color: var(--muted); }
+
+        .send {
+            width: 36px; height: 36px;
+            background: var(--accent); border: none; border-radius: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: opacity .15s;
+        }
+        .send:disabled { opacity: .4; cursor: not-allowed; }
+        .send svg { width: 16px; height: 16px; fill: white; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-icon">✦</div>
+    <div class="header-info">
+        <h3>Assistente IA</h3>
+        <p>Powered by GPT-4o mini</p>
+    </div>
+    <button class="key-btn unset" id="key-btn" onclick="toggleConfig()">🔑 Configurar API</button>
+</div>
+
+<!-- CONFIG -->
+<div class="config" id="config">
+    <input type="password" id="api-input" placeholder="Cole aqui sua OpenAI API Key  (sk-...)" />
+    <button onclick="saveKey()">Salvar</button>
+</div>
+
+<!-- CHAT -->
+<div class="chat" id="chat">
+    <div class="row">
+        <div class="avatar ai">✦</div>
+        <div>
+            <div class="bubble ai">
+                Olá! Sou seu assistente de análise. Faça perguntas sobre os dados,
+                KPIs e tendências do dashboard — ou clique em uma sugestão abaixo.
+            </div>
+            <div class="suggestions" id="chips">
+                <button class="chip" onclick="useChip(this)">Quais são os principais KPIs?</button>
+                <button class="chip" onclick="useChip(this)">Quais tendências devo observar?</button>
+                <button class="chip" onclick="useChip(this)">O que está abaixo da meta?</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- INPUT -->
+<div class="input-area">
+    <textarea
+        id="txt"
+        placeholder="Faça uma pergunta sobre os dados..."
+        rows="1"
+        onkeydown="onKey(event)"
+        oninput="resize(this)"
+    ></textarea>
+    <button class="send" id="send" onclick="send()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+</div>
+
+<script>
+/* ── CONFIGURAÇÃO ─────────────────────────────────────────────────────────
+   Edite CONTEXT_DO_DASHBOARD para incluir informações do seu dashboard.
+   Assim o GPT responderá com base nos dados reais do relatório.
+   ──────────────────────────────────────────────────────────────────────── */
+const CONTEXT_DO_DASHBOARD = `
+Você é um assistente analítico integrado a um dashboard do Power BI.
+Ajude os usuários a entender métricas, KPIs e tendências de negócios.
+
+INSTRUÇÕES:
+- Seja objetivo e use linguagem de negócios.
+- Forneça insights práticos e acionáveis.
+- Quando não souber um valor específico, oriente o usuário a verificar o visual correspondente.
+- Se o usuário perguntar sobre um número que você não tem, diga que o valor está no gráfico X ou tabela Y do dashboard.
+- Responda sempre em português do Brasil.
+
+CONTEXTO DO DASHBOARD:
+(Adicione aqui informações sobre os dados, ex: "Este dashboard mostra vendas mensais de 2023 a 2025, 
+separadas por região, produto e vendedor. A meta anual é R$ 5 milhões.")
+`;
+
+/* ─────────────────────────────────────────────────────────────────────── */
+
+let apiKey = '';
+let messages = [];
+let configOpen = false;
+
+function toggleConfig() {
+    configOpen = !configOpen;
+    document.getElementById('config').classList.toggle('open', configOpen);
+}
+
+function saveKey() {
+    const val = document.getElementById('api-input').value.trim();
+    if (!val.startsWith('sk-')) { alert('API Key inválida. Deve começar com "sk-"'); return; }
+    apiKey = val;
+    document.getElementById('api-input').value = '';
+    const btn = document.getElementById('key-btn');
+    btn.textContent = '✅ API Ativa';
+    btn.className = 'key-btn set';
+    toggleConfig();
+}
+
+function useChip(el) {
+    document.getElementById('txt').value = el.textContent;
+    document.getElementById('chips').style.display = 'none';
+    send();
+}
+
+function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+}
+
+function resize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+async function send() {
+    const txt = document.getElementById('txt');
+    const text = txt.value.trim();
+    if (!text) return;
+
+    if (!apiKey) {
+        toggleConfig();
+        addSys('⚠️ Configure a API Key antes de enviar uma mensagem.');
+        return;
+    }
+
+    txt.value = '';
+    txt.style.height = 'auto';
+    addMsg('user', text);
+    messages.push({ role: 'user', content: text });
+
+    const btn = document.getElementById('send');
+    btn.disabled = true;
+
+    const tid = 'typing-' + Date.now();
+    addTyping(tid);
+
+    try {
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + apiKey
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: CONTEXT_DO_DASHBOARD },
+                    ...messages
+                ],
+                max_tokens: 600,
+                temperature: 0.4
+            })
+        });
+
+        const data = await res.json();
+        removeEl(tid);
+
+        if (data.choices?.[0]?.message?.content) {
+            const reply = data.choices[0].message.content;
+            messages.push({ role: 'assistant', content: reply });
+            addMsg('ai', reply);
+        } else {
+            addSys('❌ Erro: ' + (data.error?.message || 'Resposta inesperada da API.'));
+        }
+    } catch (err) {
+        removeEl(tid);
+        addSys('❌ Erro de conexão. Verifique sua API Key e tente novamente.');
+    }
+
+    btn.disabled = false;
+    scroll();
+}
+
+function addMsg(role, text) {
+    const chat = document.getElementById('chat');
+    const row  = document.createElement('div');
+    row.className = 'row ' + role;
+
+    const av = document.createElement('div');
+    av.className = 'avatar ' + role;
+    av.textContent = role === 'ai' ? '✦' : 'U';
+
+    const bub = document.createElement('div');
+    bub.className = 'bubble ' + role;
+    bub.textContent = text;
+
+    row.appendChild(av);
+    row.appendChild(bub);
+    chat.appendChild(row);
+    scroll();
+}
+
+function addSys(text) {
+    const chat = document.getElementById('chat');
+    const d = document.createElement('div');
+    d.className = 'sys-msg';
+    d.textContent = text;
+    chat.appendChild(d);
+    scroll();
+}
+
+function addTyping(id) {
+    const chat = document.getElementById('chat');
+    const row  = document.createElement('div');
+    row.className = 'row'; row.id = id;
+
+    const av = document.createElement('div');
+    av.className = 'avatar ai'; av.textContent = '✦';
+
+    const bub = document.createElement('div');
+    bub.className = 'bubble ai';
+    bub.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+
+    row.appendChild(av); row.appendChild(bub);
+    chat.appendChild(row);
+    scroll();
+}
+
+function removeEl(id) { document.getElementById(id)?.remove(); }
+function scroll() {
+    const c = document.getElementById('chat');
+    c.scrollTop = c.scrollHeight;
+}
+</script>
+</body>
+</html>
