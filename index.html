@@ -31,7 +31,6 @@
             color: var(--text);
         }
 
-        /* ── HEADER ── */
         .header {
             padding: 10px 14px;
             border-bottom: 1px solid var(--border);
@@ -62,7 +61,6 @@
         .key-btn.unset { background: #fee2e2; color: #991b1b; }
         .key-btn.set   { background: #d1fae5; color: #065f46; }
 
-        /* ── CONFIG PANEL ── */
         .config {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
@@ -85,7 +83,6 @@
             font-size: 12px; cursor: pointer; white-space: nowrap;
         }
 
-        /* ── CHAT ── */
         .chat {
             flex: 1; overflow-y: auto;
             padding: 14px; display: flex;
@@ -114,7 +111,6 @@
         .bubble.ai   { background: #f1f5f9; border-bottom-left-radius: 3px; }
         .bubble.user { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
 
-        /* Typing dots */
         .dots span {
             display: inline-block; width: 5px; height: 5px;
             background: var(--muted); border-radius: 50%;
@@ -127,7 +123,6 @@
             40%            { opacity: 1;  }
         }
 
-        /* Sugestões */
         .suggestions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
         .chip {
             padding: 4px 10px;
@@ -137,13 +132,11 @@
         }
         .chip:hover { background: var(--accent-hover); }
 
-        /* Mensagem de sistema */
         .sys-msg {
             text-align: center; color: var(--muted);
             font-size: 11px; padding: 2px 0;
         }
 
-        /* ── INPUT ── */
         .input-area {
             padding: 10px 14px;
             border-top: 1px solid var(--border);
@@ -177,7 +170,8 @@
     <div class="header-icon">✦</div>
     <div class="header-info">
         <h3>Assistente IA</h3>
-        <p>Powered by Gemini 1.5 Flash</p>
+        <!-- ✅ CORRIGIDO: nome atualizado -->
+        <p>Powered by Gemini 2.0 Flash</p>
     </div>
     <button class="key-btn unset" id="key-btn" onclick="toggleConfig()">🔑 Configurar Gemini</button>
 </div>
@@ -221,10 +215,6 @@
 </div>
 
 <script>
-/* ── CONFIGURAÇÃO ─────────────────────────────────────────────────────────
-   Edite CONTEXT_DO_DASHBOARD para incluir informações do seu dashboard.
-   Assim o GPT responderá com base nos dados reais do relatório.
-   ──────────────────────────────────────────────────────────────────────── */
 const CONTEXT_DO_DASHBOARD = `
 Você é um assistente analítico integrado a um dashboard do Power BI.
 Ajude os usuários a entender métricas, KPIs e tendências de negócios.
@@ -240,8 +230,6 @@ CONTEXTO DO DASHBOARD:
 (Adicione aqui informações sobre os dados, ex: "Este dashboard mostra vendas mensais de 2023 a 2025, 
 separadas por região, produto e vendedor. A meta anual é R$ 5 milhões.")
 `;
-
-/* ─────────────────────────────────────────────────────────────────────── */
 
 let apiKey = '';
 let messages = [];
@@ -307,8 +295,9 @@ async function send() {
         }));
         geminiMessages.push({ role: 'user', parts: [{ text: text }] });
 
+        // ✅ CORRIGIDO: v1beta → v1  |  gemini-1.5-flash → gemini-2.0-flash
         const res = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey,
+            'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=' + apiKey,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
